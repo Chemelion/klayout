@@ -104,6 +104,8 @@ $ [python] ./build4mac.py
 In this section, the actual file names and directory names are those obtained on macOS Catalina.<br>
 On different OS, those names differ accordingly.
 
+Note:  once you establish working versions of qt5, homebrew, and python, builds like `./build4mac.py -q qt5macports -r mp27 -p mp38` will take substantial amounds of time (> 1 hr).
+
 ### 6A. Standard build using the OS-bundled Ruby and Python
 1. Invoke **`build4mac.py`** with the default options:
 ```
@@ -211,6 +213,21 @@ export PYTHONHOME=$HOME/opt/anaconda3
 ### 6F. Other combinations
 Logically, several different module combinations other than 6A. through 6E. are possible, including `nil` choice.<br>
 If you choose such a combination, the resultant package directory name will begin with **`EX-`** (exceptional).
+
+### 6G. Pyenv enhancement
+
+This experimental version is rigged to use pyenv version of python.  Modeled after homebrew and anaconda versions with changes in `build4mac.py` and `build4mac_env.py`.
+
+1.  use `pyenv` to install a 3.8.x version of python, e.g. `pyenv install 3.8.10` (if multiple 3.8 versions exist, the highest version will be used).
+
+$ ./build4mac.py -q qt5brew -r hb27 -p hb38 -Y
+
+2. choose options for qt5 and ruby, and install as in other examples.  Tested with:
+```
+$ cd /where/'build.sh'/exists
+$ python build4mac.py -p Pyenv -r hb27 -q qt5brew
+```
+NB:  could not get `-r sys` to work (system version is 2.3.7p456).  Homebrew 2.7 seems to work fine.
 
 ----
 
