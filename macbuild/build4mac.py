@@ -227,7 +227,7 @@ def Parse_CLI_Args(config):
 
     p.add_option( '-p', '--python',
                     dest='type_python',
-                    help="Python type=['nil', 'Sys', 'MP38', 'HB38', 'Ana3', 'HBAuto']" )
+                    help="Python type=['nil', 'Sys', 'MP38', 'HB38', 'Ana3', 'HBAuto','Pyenv']" )
 
     p.add_option( '-n', '--noqtbinding',
                     action='store_true',
@@ -377,6 +377,7 @@ def Parse_CLI_Args(config):
     candidates['HB38']   = 'HB38'
     candidates['ANA3']   = 'Ana3'
     candidates['HBAUTO'] = 'HBAuto'
+    candidates['PYENV'] = 'Pyenv'
     try:
         choicePython = candidates[ opt.type_python.upper() ]
     except KeyError:
@@ -410,6 +411,9 @@ def Parse_CLI_Args(config):
             NonOSStdLang = True
         elif choicePython == "HBAuto":
             ModulePython = 'PythonAutoBrew'
+            NonOSStdLang = True
+        elif choicePython == "Pyenv":
+            ModulePython = 'Python38Pyenv'
             NonOSStdLang = True
     if ModulePython == '':
         print("")
@@ -457,7 +461,7 @@ def Parse_CLI_Args(config):
             if (ModuleRuby in RubySys) and (ModulePython in PythonSys):
                 PackagePrefix = "ST-"
                 message      += "a standard (ST-) package including Qt5 and using OS-bundled Ruby and Python..."
-            elif ModulePython == 'Python38Brew' or ModulePython == 'PythonAutoBrew':
+            elif ModulePython == 'Python38Brew' or ModulePython == 'PythonAutoBrew' or ModulePython == 'Pyehon38Pyenv':
                 PackagePrefix = "HW-"
                 message      += "a heavyweight (HW-) package including Qt5 and Python3.8~ from Homebrew..."
             else:
@@ -1065,6 +1069,7 @@ def Deploy_Binaries_For_Bundle(config, parameters):
         #-----------------------------------------------------------------------------------------------
         deploymentPython38HB   = (ModulePython == 'Python38Brew')
         deploymentPythonAutoHB = (ModulePython == 'PythonAutoBrew')
+        deploymentPython38Pyenv = (ModulePython == 'Python38Pyenv')
         if (deploymentPython38HB or deploymentPythonAutoHB) and NonOSStdLang:
             from build4mac_util import WalkFrameworkPaths, PerformChanges
 
@@ -1202,6 +1207,155 @@ def Deploy_Binaries_For_Bundle(config, parameters):
 
             distutilsconfig = "%s/Versions/%s/lib/python%s/distutils/distutils.cfg" % \
                                                 (pythonFrameworkPath, pythonHBVer, pythonHBVer)
+            with open(distutilsconfig, 'r') as file:
+                buf = file.readlines()
+            with open(distutilsconfig, 'w') as file:
+                import re
+                for line in buf:
+                    # This will cause all packages to be installed to sys.prefix
+                    if re.match('prefix=', line) is not None:
+                        continue
+                    file.write(line)
+
+        if deploymentPython38Pyenv and NonOSStdLang:
+            from build4mac_util import WalkFrameworkPaths, PerformChanges
+
+            if deploymentPython38HB:
+                HBPythonFrameworkPath = HBPython38FrameworkPath
+                pythonHBVer           = "3.8" # 'pinned' to this version as of KLayout version 0.26.7 (2020-09-13)
+            elif deploymentPythonAutoHB:
+                HBPythonFrameworkPath = HBPythonAutoFrameworkPath
+                pythonHBVer           = HBPythonAutoVersion
+
+            pythonPyenvVer = "3.8"
+
+            bundlePath          = AbsMacPkgDir + '/klayout.app'
+            bundleExecPathAbs   = '%s/Contents/MacOS/' % bundlePath
+            pythonFrameworkPath = '%s/Contents/Frameworks/Python.framework' % bundlePath
+            testTarget          = '%s/Versions/%s/lib/python%s/test' % (pythonFrameworkPath, pythonPyenvVer, pythonPyenvVer)
+            resourceTarget1     = '%s/Versions/%s/Resources' % (pythonFrameworkPath, pythonPyenvVer)
+            resourceTarget2     = '%s/Resources' % pythonFrameworkPath
+            binTarget           = '%s/Versions/%s/bin' % (pythonFrameworkPath, pythonPyenvVer)
+            sitepackagesTarget  = '%s/Versions/%s/lib/python%s/site-packages' % (pythonFrameworkPath, pythonPyenvVer, pythonPyenvVer)
+            sitepackagesSource  = '%s/Versions/%s/lib/python%s/site-packages' % (PyenvPythonFrameworkPath, pythonPyenvVer, pythonPyenvVer)
+
+            print( "" )
+            print( " [9] Optional deployment of Python from %s ..." % PyenvPythonFrameworkPath )
+            print( "  [9.1] Copying Python Framework" )
+
+            cmd01 = "rm -rf %s" % pythonFrameworkPath
+            cmd02 = "rsync -a --safe-links %s/ %s" % (PyenvPythonFrameworkPath, pythonFrameworkPath)
+
+            cmd03 = "rm -rf %s" % testTarget
+            cmd04 = "rm -rf %s" % resourceTarget1
+            cmd05 = "unlink %s" % resourceTarget2
+            cmd06 = "rm -rf %s" % binTarget
+
+            cmd07 = "mkdir %s" % sitepackagesTarget
+            cmd08 = "cp -RL %s/{pip*,pkg_resources,setuptools*,wheel*} %s" % (sitepackagesSource, sitepackagesTarget)
+
+            shell_commands = list()
+            shell_commands.append(cmd01)
+            shell_commands.append(cmd02)
+            shell_commands.append(cmd03)
+            shell_commands.append(cmd04)
+            shell_commands.append(cmd05)
+            shell_commands.append(cmd06)
+            shell_commands.append(cmd07)
+            shell_commands.append(cmd08)
+
+            for command in shell_commands:
+                if subprocess.call( command, shell=True ) != 0:
+                    msg = "command failed: %s"
+                    print( msg % command, file=sys.stderr )
+                    sys.exit(1)
+
+            shutil.copy2( sourceDir2 + "/start-console.py", targetDirM )
+            shutil.copy2( sourceDir2 + "/klayout_console",  targetDirM )
+            os.chmod( targetDirM + "/start-console.py", 0o0755 )
+            os.chmod( targetDirM + "/klayout_console",  0o0755 )
+
+            print("  [9.2] Relinking dylib dependencies inside Python.framework" )
+            print("   [9.2.1] Patching Python Framework" )
+            depdict = WalkFrameworkPaths( pythonFrameworkPath )
+            appPythonFrameworkPath = '@executable_path/../Frameworks/Python.framework/'
+            PerformChanges(depdict, [(PyenvPythonFrameworkPath, appPythonFrameworkPath, False)], bundleExecPathAbs)
+
+            print("   [9.2.2] Patching /usr/local/opt/ libs")
+            usrLocalPath = '/usr/local/opt/'
+            appUsrLocalPath = '@executable_path/../Frameworks/'
+            replacePairs = [(usrLocalPath, appUsrLocalPath, True)]
+            depdict = WalkFrameworkPaths(pythonFrameworkPath, search_path_filter=r'\t+/usr/local/(opt|Cellar)')
+            PerformChanges(depdict, replacePairs, bundleExecPathAbs)
+
+            print("   [9.2.3] Patching openssl@1.1, gdbm, readline, sqlite, xz")
+            usrLocalPath = '/usr/local/opt'
+            appUsrLocalPath = '@executable_path/../Frameworks/'
+            replacePairs = [(usrLocalPath, appUsrLocalPath, True)]
+            replacePairs.extend([(openssl_version, '@executable_path/../Frameworks/openssl@1.1', True)
+                for openssl_version in glob.glob('/usr/local/Cellar/openssl@1.1/*')])
+            depdict = WalkFrameworkPaths([pythonFrameworkPath + '/../openssl@1.1',
+                                                                        pythonFrameworkPath + '/../gdbm',
+                                                                        pythonFrameworkPath + '/../readline',
+                                                                        pythonFrameworkPath + '/../sqlite',
+                                                                        pythonFrameworkPath + '/../xz'], search_path_filter=r'\t+/usr/local/(opt|Cellar)')
+
+            PerformChanges(depdict, replacePairs, bundleExecPathAbs)
+
+            print("  [9.3] Relinking dylib dependencies for klayout")
+            klayoutPath = bundleExecPathAbs
+            depdict = WalkFrameworkPaths(klayoutPath, filter_regex=r'klayout$')
+            PerformChanges(depdict, [(PyenvPythonFrameworkPath, appPythonFrameworkPath, False)], bundleExecPathAbs)
+
+            libKlayoutPath = bundleExecPathAbs + '../Frameworks'
+            depdict = WalkFrameworkPaths(libKlayoutPath, filter_regex=r'libklayout')
+            PerformChanges(depdict, [(PyenvPythonFrameworkPath, appPythonFrameworkPath, False)], bundleExecPathAbs)
+
+            print("  [9.4] Patching site.py, pip/, and distutils/")
+            site_module = "%s/Versions/%s/lib/python%s/site.py" % (pythonFrameworkPath, pythonPyenvVer, pythonPyenvVer)
+            with open(site_module, 'r') as site:
+                buf = site.readlines()
+            with open(site_module, 'w') as site:
+                import re
+                for line in buf:
+                    # This will fool pip into thinking it's inside a virtual environment
+                    # and install new packages to the correct site-packages
+                    if re.match("^PREFIXES", line) is not None:
+                        line = line + "sys.real_prefix = sys.prefix\n"
+                    # do not allow installation in the user folder.
+                    if re.match("^ENABLE_USER_SITE", line) is not None:
+                        line = "ENABLE_USER_SITE = False\n"
+                    site.write(line)
+
+            #----------------------------------------------------------------------------------
+            # Typical usage of 'pip' after installation of the DMG package
+            #
+            # $ /Applications/klayout.app/Contents/MacOS/start-console.py
+            # Warning: Populating font family aliases took 195 ms. Replace uses of missing font\
+            # family "Monospace" with one that exists to avoid this cost.
+            # Python 3.7.8 (default, Jul  4 2020, 10:17:17)
+            # [Clang 11.0.3 (clang-1103.0.32.62)] on darwin
+            # Type "help", "copyright", "credits" or "license" for more information.
+            # (KLayout Python Console)
+            # >>> import pip
+            # >>> pip.main( ['install', 'numpy'] )
+            # >>> pip.main( ['install', 'scipy'] )
+            # >>> pip.main( ['install', 'pandas'] )
+            # >>> pip.main( ['install', 'matplotlib'] )
+            #----------------------------------------------------------------------------------
+            pip_module = "%s/Versions/%s/lib/python%s/site-packages/pip/__init__.py" % \
+                                     (pythonFrameworkPath, pythonPyenvVer, pythonPyenvVer)
+            with open(pip_module, 'r') as pip:
+                buf = pip.readlines()
+            with open(pip_module, 'w') as pip:
+                import re
+                for line in buf:
+                    # this will reject user's configuration of pip, forcing the isolated mode
+                    line = re.sub("return isolated$", "return isolated or True", line)
+                    pip.write(line)
+
+            distutilsconfig = "%s/Versions/%s/lib/python%s/distutils/distutils.cfg" % \
+                                                (pythonFrameworkPath, pythonPyenvVer, pythonPyenvVer)
             with open(distutilsconfig, 'r') as file:
                 buf = file.readlines()
             with open(distutilsconfig, 'w') as file:

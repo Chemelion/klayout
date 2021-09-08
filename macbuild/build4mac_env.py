@@ -13,6 +13,8 @@
 import os
 import glob
 import platform
+import sys
+import re
 
 #---------------------------------------------------------------------------------------------------
 # [0] Xcode's tools
@@ -273,6 +275,7 @@ PythonAnaconda3 = { 'exe': '/Applications/anaconda3/bin/python3.8',
                     'lib': '/Applications/anaconda3/lib/libpython3.8.dylib'
                   }
 
+
 # Latest Python from Homebrew *+*+*+ EXPERIMENTAL *+*+*+
 #   install with 'brew install python'
 #   There can be multiple candidates such as: (python, python3, python@3, python@3.8, python@3.9)
@@ -295,6 +298,42 @@ except Exception as e:
 else:
     _have_Homebrew_Python = True
 
+# *+*+*+ EXPERIMENTAL *+*+*+
+# Try and get pyenv 3.8.x version (latest)
+def get_pyenv_version():
+  env_home = os.environ['HOME']
+  try:
+    vers = os.listdir(env_home+'/.pyenv/versions')
+  except:
+    print( "!!! Sorry. not finding pyenv versions.", file=sys.stderr )
+    raise RuntimeError('...problem with pyenv...')
+  vers = [x for x in vers if not re.match('[a-z]',x)]
+  vers = [x for x in vers if '3.8' in x]
+  if len(vers)==0:
+    print( "!!! Sorry. Looks like your pyenv doesn't have a version 3.8.x of python", file=sys.stderr )
+    raise RuntimeError('...problem with pyenv...')
+  vers.sort()                   # e.g. ['3.8.6','3.8.10']
+  vers = vers[-1:][0]           # e.g. '3.8.10'
+  return vers
+  
+
+
+PyenvPythonFramworkPath = ""
+try:
+  PyenvPythonVersion = get_pyenv_version()
+  PyenvPythonFrameworkPath =  os.environ['HOME']+'/.pyenv/versions/'+get_pyenv_version()
+  Python38Pyenv = { 'exe': os.environ['HOME']+'/.pyenv/versions/'+get_pyenv_version()+'/bin/python3.8',
+                    'inc': os.environ['HOME']+'/.pyenv/versions/'+get_pyenv_version()+'/include/python3.8',
+                    'lib': os.environ['HOME']+'/.pyenv/versions/'+get_pyenv_version()+'/lib/libpython3.8.a'
+  }
+except:
+  _have_Pyenv = False
+  print("problem with pyenv... can't use '-p Pyenv' option. ")
+  pass
+else:
+  _have_Pyenv = True
+  
+    
 # Consolidated dictionary kit for Python
 PythonDictionary = { 'nil'             : None,
                      'PythonElCapitan' : PythonElCapitan,
@@ -305,7 +344,8 @@ PythonDictionary = { 'nil'             : None,
                      'PythonBigSur'    : PythonBigSur,
                      'Python38MacPorts': Python38MacPorts,
                      'Python38Brew'    : Python38Brew,
-                     'PythonAnaconda3' : PythonAnaconda3
+                     'PythonAnaconda3' : PythonAnaconda3,
+                     'Python38Pyenv'   : Python38Pyenv
                    }
 if _have_Homebrew_Python:
     PythonDictionary['PythonAutoBrew'] = PythonAutoBrew
