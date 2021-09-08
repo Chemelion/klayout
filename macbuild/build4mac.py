@@ -49,12 +49,13 @@ def Get_Default_Config():
     Usage += "                        :   MP27: use Ruby 2.7 from MacPorts                             | \n"
     Usage += "                        :   HB27: use Ruby 2.7 from Homebrew                             | \n"
     Usage += "                        :   Ana3: use Ruby 2.5 from Anaconda3                            | \n"
-    Usage += "   [-p|--python <type>] : case-insensitive type=['nil', 'Sys', 'MP38', 'HB38', 'Ana3',   | sys \n"
-    Usage += "                        :                        'HBAuto']                               | \n"
+    Usage += "   [-p|--python <type>] : case-insensitive type=['nil', 'Sys', 'MP38', 'HB38',  'HB39',  | sys \n"
+    Usage += "                        :                        'Ana3', 'HBAuto']                       | \n"
     Usage += "                        :    nil: don't bind Python                                      | \n"
     Usage += "                        :    Sys: use OS-bundled Python 2.7 [ElCapitan -- BigSur]        | \n"
     Usage += "                        :   MP38: use Python 3.8 from MacPorts                           | \n"
     Usage += "                        :   HB38: use Python 3.8 from Homebrew                           | \n"
+    Usage += "                        :   HB39: use Python 3.9 from Homebrew                           | \n"
     Usage += "                        :   Ana3: use Python 3.8 from Anaconda3                          | \n"
     Usage += "                        : HBAuto: use the latest Python 3.x auto-detected from Homebrew  | \n"
     Usage += "   [-n|--noqtbinding]   : don't create Qt bindings for ruby scripts                      | disabled \n"
@@ -227,7 +228,7 @@ def Parse_CLI_Args(config):
 
     p.add_option( '-p', '--python',
                     dest='type_python',
-                    help="Python type=['nil', 'Sys', 'MP38', 'HB38', 'Ana3', 'HBAuto']" )
+                    help="Python type=['nil', 'Sys', 'MP38', 'HB38', 'HB39', Ana3', 'HBAuto']" )
 
     p.add_option( '-n', '--noqtbinding',
                     action='store_true',
@@ -375,6 +376,7 @@ def Parse_CLI_Args(config):
     candidates['SYS']    = 'Sys'
     candidates['MP38']   = 'MP38'
     candidates['HB38']   = 'HB38'
+    candidates['HB39']   = 'HB39'
     candidates['ANA3']   = 'Ana3'
     candidates['HBAUTO'] = 'HBAuto'
     try:
@@ -404,6 +406,9 @@ def Parse_CLI_Args(config):
             NonOSStdLang = True
         elif choicePython == "HB38":
             ModulePython = 'Python38Brew'
+            NonOSStdLang = True
+        elif choicePython == "HB39":
+            ModulePython = 'Python39Brew'
             NonOSStdLang = True
         elif choicePython == "Ana3":
             ModulePython = 'PythonAnaconda3'

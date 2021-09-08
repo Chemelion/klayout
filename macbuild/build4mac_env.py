@@ -190,7 +190,7 @@ RubyDictionary  = { 'nil'           : None,
 #-----------------------------------------------------
 PythonNil = [ 'nil' ]
 PythonSys = [ 'PythonElCapitan', 'PythonSierra', 'PythonHighSierra', 'PythonMojave', 'PythonCatalina', 'PythonBigSur' ]
-PythonExt = [ 'Python38MacPorts', 'Python38Brew', 'PythonAnaconda3', 'PythonAutoBrew' ]
+PythonExt = [ 'Python38MacPorts', 'Python38Brew', 'Python39Brew', 'PythonAnaconda3', 'PythonAutoBrew' ]
 Pythons   = PythonNil + PythonSys + PythonExt
 
 #-----------------------------------------------------
@@ -264,6 +264,15 @@ Python38Brew    = { 'exe': '%s/Versions/3.8/bin/python3.8' % HBPython38Framework
                     'lib': '%s/Versions/3.8/lib/libpython3.8.dylib' % HBPython38FrameworkPath
                   }
 
+# Python 3.9 from Homebrew *+*+*+ EXPERIMENTAL JSM *+*+*+
+#   install with 'brew install python'
+# [Key Type Name] = 'HB39'
+HBPython39FrameworkPath = '%s/opt/python@3.9/Frameworks/Python.framework' % DefaultHomebrewRoot
+Python39Brew    = { 'exe': '%s/Versions/3.9/bin/python3.9' % HBPython39FrameworkPath,
+                    'inc': '%s/Versions/3.9/include/python3.9' % HBPython39FrameworkPath,
+                    'lib': '%s/Versions/3.9/lib/libpython3.9.dylib' % HBPython39FrameworkPath
+                  }
+
 # Python 3.8 bundled with anaconda3 installed under /Applications/anaconda3/ *+*+*+ EXPERIMENTAL *+*+*+
 # The standard installation deploys the tool under $HOME/opt/anaconda3/.
 # If so, you need to make a symbolic link: /Applications/anaconda3 ---> $HOME/opt/anaconda3/
@@ -305,6 +314,7 @@ PythonDictionary = { 'nil'             : None,
                      'PythonBigSur'    : PythonBigSur,
                      'Python38MacPorts': Python38MacPorts,
                      'Python38Brew'    : Python38Brew,
+                     'Python39Brew'    : Python39Brew,
                      'PythonAnaconda3' : PythonAnaconda3
                    }
 if _have_Homebrew_Python:

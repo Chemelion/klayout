@@ -73,12 +73,13 @@ $ [python] ./build4mac.py
                         :   MP27: use Ruby 2.7 from MacPorts                             |
                         :   HB27: use Ruby 2.7 from Homebrew                             |
                         :   Ana3: use Ruby 2.5 from Anaconda3                            |
-   [-p|--python <type>] : case-insensitive type=['nil', 'Sys', 'MP38', 'HB38', 'Ana3',   | sys
-                        :                        'HBAuto']                               |
+   [-p|--python <type>] : case-insensitive type=['nil', 'Sys', 'MP38', 'HB38', 'HB39',   | sys
+                        :                        Ana3', 'HBAuto']                        |
                         :    nil: don't bind Python                                      |
                         :    Sys: use OS-bundled Python 2.7 [ElCapitan -- BigSur]        |
                         :   MP38: use Python 3.8 from MacPorts                           |
                         :   HB38: use Python 3.8 from Homebrew                           |
+                        :   HB39: use Python 3.9 from Homebrew                           |
                         :   Ana3: use Python 3.7 from Anaconda3                          |
                         : HBAuto: use the latest Python 3.x auto-detected from Homebrew  |
    [-n|--noqtbinding]   : don't create Qt bindings for ruby scripts                      | disabled
@@ -147,7 +148,7 @@ $ ./build4mac.py -q qt5macports -r mp27 -p mp38 -Y
 * "Rmp27Pmp38" means that Ruby is 2.7 from MacPorts; Python is 3.8 from MacPorts.
 4. Copy/move the generated application bundle **`klayout.app`** to your **`/Applications`** directory for installation.
 
-### 6C. Fully Homebrew-flavored build with Homebrew Ruby 2.7 and Homebrew Python 3.8
+### 6C_8. Fully Homebrew-flavored build with Homebrew Ruby 2.7 and Homebrew Python 3.8
 ```
 $ cd /where/'build.sh'/exists
 $ ./build4mac.py -q qt5brew -r hb27 -p hb38
@@ -165,7 +166,25 @@ $ ./build4mac.py -q qt5brew -r hb27 -p hb38 -Y
 * "Rhb27Phb38" means that Ruby is 2.7 from Homebrew; Python is 3.8 from Homebrew.
 4. Copy/move the generated application bundle **`klayout.app`** to your **`/Applications`** directory for installation.
 
-### 6D. Partially Homebrew-flavored build with System Ruby and Homebrew Python 3.8
+### 6C_9. Fully Homebrew-flavored build with Homebrew Ruby 2.7 and Homebrew Python 3.9
+```
+$ cd /where/'build.sh'/exists
+$ ./build4mac.py -q qt5brew -r hb27 -p hb39
+```
+2. Confirm successful build (it will take about one hour depending on your machine spec).
+3. Run **`build4mac.py`** again with the same options used in 1. PLUS "-Y" to deploy executables and libraries under **`klayout.app`** bundle.<br>
+   The buddy command-line tools (strm*) will also be deployed in this step.
+```
+$ ./build4mac.py -q qt5brew -r hb27 -p hb39 -Y
+```
+  The application bundle **`klayout.app`** is located under:<br>
+  **`LW-qt5Brew.pkg.macos-BigSur-release-Rhb27Phb39`** directory, where
+* "LW-"        means that this is a lightweight package.
+* "qt5Brew"    means that Qt5 from Homebrew is used.
+* "Rhb27Phb39" means that Ruby is 2.7 from Homebrew; Python is 3.9 from Homebrew.
+4. Copy/move the generated application bundle **`klayout.app`** to your **`/Applications`** directory for installation.
+
+### 6D_8. Partially Homebrew-flavored build with System Ruby and Homebrew Python 3.8
 ```
 $ cd /where/'build.sh'/exists
 $ ./build4mac.py -q qt5brew -r sys -p hb38
@@ -181,6 +200,27 @@ $ ./build4mac.py -q qt5brew -r sys -p hb38 -y
 * "HW-"        means that this is a heavyweight package because both Qt5 and Python are deployed.
 * "qt5Brew"    means that Qt5 from Homebrew is used.
 * "RsysPhb38"  means that Ruby is OS-bundled; Python is 3.8 from Homebrew.
+4. Copy/move the generated application bundle **`klayout.app`** to your **`/Applications`** directory for installation.
+### Important ###
+So far, the deployment of Homebrew Ruby is not supported. <br>
+Therefore, if you intend to use the "-y" option for deployment, you need to use the "-r sys" option for building.
+
+### 6D_9. Partially Homebrew-flavored build with System Ruby and Homebrew Python 3.9
+```
+$ cd /where/'build.sh'/exists
+$ ./build4mac.py -q qt5brew -r sys -p hb39
+```
+2. Confirm successful build (it will take about one hour depending on your machine spec).
+3. Run **`build4mac.py`** again with the same options used in 1. PLUS "-y" to deploy executables and libraries (including Qt's framework and Python framework) under **`klayout.app`** bundle.<br>
+   The buddy command-line tools (strm*) will also be deployed in this step.
+```
+$ ./build4mac.py -q qt5brew -r sys -p hb39 -y
+```
+  The application bundle **`klayout.app`** is located under:<br>
+  **`HW-qt5Brew.pkg.macos-BigSur-release-RsysPhb39`** directory, where
+* "HW-"        means that this is a heavyweight package because both Qt5 and Python are deployed.
+* "qt5Brew"    means that Qt5 from Homebrew is used.
+* "RsysPhb39"  means that Ruby is OS-bundled; Python is 3.9 from Homebrew.
 4. Copy/move the generated application bundle **`klayout.app`** to your **`/Applications`** directory for installation.
 ### Important ###
 So far, the deployment of Homebrew Ruby is not supported. <br>
