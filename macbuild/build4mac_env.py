@@ -324,7 +324,7 @@ try:
   PyenvPythonFrameworkPath =  os.environ['HOME']+'/.pyenv/versions/'+get_pyenv_version()
   Python38Pyenv = { 'exe': os.environ['HOME']+'/.pyenv/versions/'+get_pyenv_version()+'/bin/python3.8',
                     'inc': os.environ['HOME']+'/.pyenv/versions/'+get_pyenv_version()+'/include/python3.8',
-                    'lib': os.environ['HOME']+'/.pyenv/versions/'+get_pyenv_version()+'/lib/libpython3.8.a'
+                    'lib': os.environ['HOME']+'/.pyenv/versions/'+get_pyenv_version()+'/lib/libpython3.8.dylib'
   }
 except:
   _have_Pyenv = False
